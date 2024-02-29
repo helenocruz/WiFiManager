@@ -932,6 +932,7 @@ uint8_t WiFiManager::processConfigPortal(){
         // clear save strings
         _ssid = "";
         _pass = "";
+        _unique_code = "";
         // if connect fails, turn sta off to stabilize AP
         WiFi_Disconnect();
         WiFi_enableSTA(false);
@@ -1813,9 +1814,10 @@ void WiFiManager::handleWifiSave() {
 
   //SAVE/connect here
   _ssid = server->arg(F("s")).c_str();
-  _pass = server->arg(F("p")).c_str();
+  _pass = server->arg(F('"p"')).c_str();
+  _unique_code = server->arg(F("u")).c_str(); // Unique code from device added by me
 
-  if(_ssid == "" && _pass != ""){
+  if(_ssid == "" && _pass != "" && _unique_code != ""){
     _ssid = WiFi_SSID(true); // password change, placeholder ssid, @todo compare pass to old?, confirm ssid is clean
     #ifdef WM_DEBUG_LEVEL
     DEBUG_WM(WM_DEBUG_VERBOSE,F("Detected WiFi password change"));
@@ -1834,6 +1836,16 @@ void WiFiManager::handleWifiSave() {
   for (uint8_t i = 0; i < server->args(); i++) {
     requestinfo += " " + server->argName(i) + ": " + server->arg(i) + "\n";
   }
+
+  // Saving the text file with the Device Unique Code
+  std::ofstream outputFile;
+  outputFile.open("uc.ini");
+  if (!outputFile.is_open()) {
+    std::cerr << "Error: Unable to open the file." << std::endl;
+  }
+  outputFile << _unique_code << std::endl;
+  outputFile.close();
+  // End
 
   DEBUG_WM(WM_DEBUG_MAX,requestinfo);
   #endif
@@ -3303,6 +3315,22 @@ bool WiFiManager::preloadWiFi(String ssid, String pass){
 }
 
 // HELPERS
+
+/**
+ * getUniqueCode
+ */
+String WiFiManager::getUniqueCode(){
+  std::ifstream inputFile;
+  inputFile.open("uc.ini");
+  if (!inputFile.is_open()) {
+    std::cerr << "Error: Unable to open the file." << std::endl;
+  }
+  std::string line;
+  std::getline(inputFile, line)
+  inputFile.close();
+  std::cerr << line << std::endl;
+  return line;
+}
 
 /**
  * getWiFiSSID

@@ -18,6 +18,8 @@
 
 #ifdef ESP8266
 #include <core_version.h>
+#include <iostream>
+#include <fstream>
 #endif
 
 #include <vector>
@@ -254,7 +256,7 @@ class WiFiManager
 
     // auto connect to saved wifi, or custom, and start config portal on failures
     boolean       autoConnect();
-    boolean       autoConnect(char const *apName, char const *apPassword = NULL);
+    boolean       autoCConnect(char const *apName, char const *apPassword = NULL);
 
     //manually start the config portal, autoconnect does this automatically on connect failure
     boolean       startConfigPortal(); // auto generates apname
@@ -461,6 +463,9 @@ class WiFiManager
     // helper to get saved ssid, if persistent get stored, else get current if connected
     String        getWiFiSSID(bool persistent = true);
 
+    // helper to get saved unique code from device
+    String        getUniqueCode();
+
     // debug output the softap config
     void          debugSoftAPConfig();
 
@@ -538,6 +543,7 @@ class WiFiManager
     String        _apPassword             = "";
     String        _ssid                   = ""; // var temp ssid
     String        _pass                   = ""; // var temp psk
+    String        _unique_code            = ""; // var temp unique code from device
     String        _defaultssid            = ""; // preload ssid
     String        _defaultpass            = ""; // preload pass
 
