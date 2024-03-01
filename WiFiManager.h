@@ -18,8 +18,6 @@
 
 #ifdef ESP8266
 #include <core_version.h>
-#include <iostream>
-#include <fstream>
 #endif
 
 #include <vector>
@@ -256,7 +254,7 @@ class WiFiManager
 
     // auto connect to saved wifi, or custom, and start config portal on failures
     boolean       autoConnect();
-    boolean       autoCConnect(char const *apName, char const *apPassword = NULL);
+    boolean       autoConnect(char const *apName, char const *apPassword = NULL);
 
     //manually start the config portal, autoconnect does this automatically on connect failure
     boolean       startConfigPortal(); // auto generates apname

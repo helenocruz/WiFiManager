@@ -1814,7 +1814,7 @@ void WiFiManager::handleWifiSave() {
 
   //SAVE/connect here
   _ssid = server->arg(F("s")).c_str();
-  _pass = server->arg(F('"p"')).c_str();
+  _pass = server->arg(F("p")).c_str();
   _unique_code = server->arg(F("u")).c_str(); // Unique code from device added by me
 
   if(_ssid == "" && _pass != "" && _unique_code != ""){
@@ -1837,15 +1837,9 @@ void WiFiManager::handleWifiSave() {
     requestinfo += " " + server->argName(i) + ": " + server->arg(i) + "\n";
   }
 
-  // Saving the text file with the Device Unique Code
-  std::ofstream outputFile;
-  outputFile.open("uc.ini");
-  if (!outputFile.is_open()) {
-    std::cerr << "Error: Unable to open the file." << std::endl;
-  }
-  outputFile << _unique_code << std::endl;
-  outputFile.close();
-  // End
+  // Show off the unique code on the screen
+  Serial.println("Unique Code from device:");
+  Serial.println(_unique_code);
 
   DEBUG_WM(WM_DEBUG_MAX,requestinfo);
   #endif
@@ -3326,10 +3320,10 @@ String WiFiManager::getUniqueCode(){
     std::cerr << "Error: Unable to open the file." << std::endl;
   }
   std::string line;
-  std::getline(inputFile, line)
+  std::getline(inputFile, line);
   inputFile.close();
   std::cerr << line << std::endl;
-  return line;
+  return "";
 }
 
 /**
