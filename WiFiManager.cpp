@@ -9,8 +9,10 @@
  * @version 0.0.0
  * @license MIT
  */
-
+#include "nvs_flash.h"
 #include "WiFiManager.h"
+
+#define _UC_ADDRESS  "uc"
 
 #if defined(ESP8266) || defined(ESP32)
 
@@ -932,7 +934,7 @@ uint8_t WiFiManager::processConfigPortal(){
         // clear save strings
         _ssid = "";
         _pass = "";
-        _unique_code = "";
+        _unique_code = 0;
         // if connect fails, turn sta off to stabilize AP
         WiFi_Disconnect();
         WiFi_enableSTA(false);
@@ -1815,14 +1817,37 @@ void WiFiManager::handleWifiSave() {
   //SAVE/connect here
   _ssid = server->arg(F("s")).c_str();
   _pass = server->arg(F("p")).c_str();
-  _unique_code = server->arg(F("u")).c_str(); // Unique code from device added by me
+  _unique_code = (int) server->arg(F("u")).c_str(); // Unique code from device added by me
 
-  if(_ssid == "" && _pass != "" && _unique_code != ""){
+  nvs_handle handler_particao_nvs;
+  esp_err_t err;  
+  err = nvs_flash_init_partition("nvs");
+  err = nvs_open_from_partition("nvs", "ns_nvs", NVS_READWRITE, &handler_particao_nvs);
+  if (err != ESP_OK)
+  {
+    Serial.println("[ERRO] Falha ao abrir NVS como escrita/leitura"); 
+    return;
+  }
+  /* Atualiza valor do horimetro total */
+  err = nvs_set_u32(handler_particao_nvs, _UC_ADDRESS, _unique_code);
+  if (err != ESP_OK){
+    Serial.println("[ERRO] Erro ao gravar horimetro");                   
+    nvs_close(handler_particao_nvs);
+    return;
+
+  } else {
+    Serial.println("Dado gravado com sucesso!");     
+    nvs_commit(handler_particao_nvs);    
+    nvs_close(handler_particao_nvs);      
+  }
+
+
+  if(_ssid == "" && _pass != ""){
     _ssid = WiFi_SSID(true); // password change, placeholder ssid, @todo compare pass to old?, confirm ssid is clean
     #ifdef WM_DEBUG_LEVEL
     DEBUG_WM(WM_DEBUG_VERBOSE,F("Detected WiFi password change"));
     #endif    
-  }
+  } 
 
   #ifdef WM_DEBUG_LEVEL
   String requestinfo = "SERVER_REQUEST\n----------------\n";
@@ -3314,16 +3339,36 @@ bool WiFiManager::preloadWiFi(String ssid, String pass){
  * getUniqueCode
  */
 String WiFiManager::getUniqueCode(){
-  std::ifstream inputFile;
-  inputFile.open("uc.ini");
-  if (!inputFile.is_open()) {
-    std::cerr << "Error: Unable to open the file." << std::endl;
+  nvs_handle handler_particao_nvs;
+  esp_err_t err;
+  uint32_t dado_lido;
+
+  err = nvs_flash_init_partition("nvs");
+
+  if (err != ESP_OK)
+  {
+    Serial.println("[ERRO] Falha ao iniciar partição NVS.");         
+    return "";
   }
-  std::string line;
-  std::getline(inputFile, line);
-  inputFile.close();
-  std::cerr << line << std::endl;
-  return "";
+
+  err = nvs_open_from_partition("nvs", "ns_nvs", NVS_READWRITE, &handler_particao_nvs);
+  if (err != ESP_OK)
+  {
+    Serial.println("[ERRO] Falha ao abrir NVS como escrita/leitura");         
+    return "";
+  }
+
+  err = nvs_get_u32(handler_particao_nvs, _UC_ADDRESS, &dado_lido);
+    
+  if (err != ESP_OK) {
+    Serial.println("[ERRO] Falha ao fazer leitura do dado");         
+    return "";
+
+  } else {
+    Serial.println("Dado lido com sucesso!");  
+    nvs_close(handler_particao_nvs);
+    return std::to_string(dado_lido);
+  }
 }
 
 /**

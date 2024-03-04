@@ -541,7 +541,7 @@ class WiFiManager
     String        _apPassword             = "";
     String        _ssid                   = ""; // var temp ssid
     String        _pass                   = ""; // var temp psk
-    String        _unique_code            = ""; // var temp unique code from device
+    uint32_t      _unique_code            = 0; // var temp unique code from device
     String        _defaultssid            = ""; // preload ssid
     String        _defaultpass            = ""; // preload pass
 
